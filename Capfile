@@ -8,7 +8,7 @@ set :admin_runner, "www-data"
 ssh_options[:forward_agent] = true
 
 set :scm, :git
-set :branch, "master"
+set :branch, "production"
 set :deploy_via, :remote_cache
 set :deploy_to, "/var/www/haste-server"
 set :keep_releases, 4
