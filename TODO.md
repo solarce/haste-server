@@ -1,4 +1,4 @@
-# TODO
+# TODO for OSS
 * tests
 * fix that chrome bug where it loads the doc twice
 * kick expiration back by increment on each view
@@ -8,13 +8,8 @@
 * test new interface in browsers
 * auto-compress assets
 * fix issues with deploy
-* get staticCache back in
-
+* add feedback for errors to UI - esp. too long
 
 # shared version only
 * some way to do announcements easily (and use for ads)
-
-
-# with brian's design
-* add feedback for errors to UI - esp. too long
-* copy URL to clipboard button
+* fix issues with deploy
