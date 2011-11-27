@@ -28,7 +28,7 @@ namespace :deploy do
   task :update, :roles => :app do
     release = "#{Time.now.to_i}"
     
-    run "cd #{deploy_to}/code && git pull origin master"
+    run "cd #{deploy_to}/code && git fetch origin && git pull origin #{branch}"
     
     run "cp -Rf #{deploy_to}/code #{deploy_to}/releases/#{release}"
     run "rm #{deploy_to}/current"
