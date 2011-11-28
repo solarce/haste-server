@@ -6,7 +6,6 @@
 * Better about page text
 * add feedback for errors to UI - esp. too long
 * html escape everything
-* fix issues with deploy
 * add feedback for errors to UI - esp. too long
 
 # shared version only

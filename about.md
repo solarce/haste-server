@@ -5,6 +5,11 @@ A lot of times, I want to show you something I'm seeing - and that's where we us
 
 Haste is the prettiest, easist to use pastebin ever made.
 
+## Basic Usage
+
+Type what you want me to see, click "Save", and then copy the URL.  Send that URL
+to someone and they'll see what you see.
+
 ## From the Console
 
 Most of the time I want to show you some text, its coming from my current console session.
@@ -21,8 +26,17 @@ been conveniently copied to your clipboard.
 
 That's all there is to that, and you can install it with `gem install haste` right now.
 
+## Duration
+
+Pastes will stay for 30 days from their last view.
+
+## Privacy
+
+While the contents of hastebin.com are not directly crawled by any search robot that
+obeys "robots.txt", there should be no great expectation of privacy.  Post things at your
+own risk. Not responsible for any loss of data or removed pastes.
+
 ## Author
 
 Code by John Crepezzi <john.crepezzi@gmail.com>
-Design by Brian Dawson
-
+Key Design by Brian Dawson
