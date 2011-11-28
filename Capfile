@@ -31,7 +31,7 @@ namespace :deploy do
     run "cd #{deploy_to}/code && git fetch origin && git pull origin #{branch}"
     
     run "cp -Rf #{deploy_to}/code #{deploy_to}/releases/#{release}"
-    run "rm #{deploy_to}/current"
+    run "rm #{deploy_to}/current; true"
     run "ln -sf #{deploy_to}/releases/#{release} #{deploy_to}/current"
 
     run "cd #{deploy_to}/current && npm install https://github.com/Hiverness/hashlib/tarball/compat_fix_node_0_6_X"
