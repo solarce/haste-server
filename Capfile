@@ -2,7 +2,7 @@ set :application, "haste-server"
 set :node_file, "server.js"
 set :host, "96.126.105.213"
 set :repository, "git@codeplane.com:seejohnrun/haste-server.git"
-set :user, "john"
+set :user, "haste-admin"
 set :admin_runner, "www-data"
 
 ssh_options[:forward_agent] = true
@@ -19,7 +19,6 @@ namespace :deploy do
 
   desc 'setup the deploy'
   task :setup, :roles => :app do
-    run "rm -rf #{deploy_to}"
     run "mkdir -p #{deploy_to}/releases"
     run "cd #{deploy_to} && git clone #{repository} code"
   end
