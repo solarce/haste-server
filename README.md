@@ -1,24 +1,18 @@
 # Haste
 
-Haste is an open-source pastebin software written in node.js, which is easily installable in any network.  By default, it is filesystem backed, but it can also be set up to work with Redis quickly.
+Haste is an open-source pastebin software written in node.js, which is easily installable in any network.  It can be backed by either redis or filesystem, and has a very easy adapter interface for other stores.  A publicly available version can be found at [hastebin.com](http://hastebin.com)
 
 Major design objectives:
 
 * Be really pretty
 * Be really simple
 * Be easy to set up and use
-* By default, don't require any external database
-* API-driven
 
 Haste works really well with a little utility called haste-client, allowing you to do things like:
 
 `cat something | haste`
 
-which will output a URL to share, or
-
-`cat something | haste | pbcopy`
-
-to copy the URL to the clipboard.
+which will output a URL to share containing the contents of `cat something`'s STDOUT
 
 ## Tested Browsers
 
@@ -33,9 +27,21 @@ to copy the URL to the clipboard.
 3.  `npm install`
 4.  `npm start`
 
+## Settings
+
+* `host` - the host the server runs on (default localhost)
+* `port` - the port the server runs on (default 7777)
+* `keyLength` - the length of the keys to user (default 10)
+* `maxLength` - maximum length of a paste (default none)
+* `staticMaxAge` - max age for static assets (86400)
+* `recompressStatisAssets` - whether or not to compile static js assets (true)
+* `documents` - static documents to serve (ex: http://hastebin.com/about.com) in addition to static assets.  These will never expire.
+* `storage` - storage options (see below)
+* `logging` - logging preferences
+
 ## Storage
 
-## File
+### File
 
 To use file storage (the default) change the storage section in `config.js` to something like:
 
@@ -64,6 +70,8 @@ Once you've done that, your config section should look like:
 	"db": 2
 }
 ```
+
+You can also set an `expire` option to the number of seconds to expire keys in.  This is off by default, but will constantly kick back expirations on each view or post.
 
 All of which are optional except `type` with very logical default values.
 
