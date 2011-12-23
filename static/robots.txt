@@ -1,4 +1,5 @@
 User-agent: *
 Disallow: /*
-Allow: /?okparam=
 Allow: /$
+Allow: /about
+Allow: /about.md

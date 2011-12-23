@@ -2,7 +2,7 @@ set :application, "haste-server"
 set :node_file, "server.js"
 set :host, "96.126.105.213"
 set :repository, "git@codeplane.com:seejohnrun/haste-server.git"
-set :user, "john"
+set :user, "haste-admin"
 set :admin_runner, "www-data"
 
 ssh_options[:forward_agent] = true
@@ -19,7 +19,6 @@ namespace :deploy do
 
   desc 'setup the deploy'
   task :setup, :roles => :app do
-    run "rm -rf #{deploy_to}"
     run "mkdir -p #{deploy_to}/releases"
     run "cd #{deploy_to} && git clone #{repository} code"
   end
@@ -31,10 +30,10 @@ namespace :deploy do
     run "cd #{deploy_to}/code && git fetch origin && git pull origin #{branch}"
     
     run "cp -Rf #{deploy_to}/code #{deploy_to}/releases/#{release}"
-    run "rm #{deploy_to}/current"
+    run "rm #{deploy_to}/current; true"
     run "ln -sf #{deploy_to}/releases/#{release} #{deploy_to}/current"
 
-    run "cd #{deploy_to}/current && npm install https://github.com/Hiverness/hashlib/tarball/compat_fix_node_0_6_X"
+    run "cd #{deploy_to}/current && npm install https://github.com/ovaillancourt/hashlib/tarball/compat_fix_node_0_6_X"
     run "cd #{deploy_to}/current && npm install redis"
     run "cd #{deploy_to}/current && npm install"
 
