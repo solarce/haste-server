@@ -3,7 +3,7 @@
   "host": "localhost",
   "port": 7777,
 
-  "keyLength": 6,
+  "keyLength": 10,
 
   "maxLength": 400000,
 
@@ -24,7 +24,7 @@
     "host": "localhost",
     "port": 6379,
     "db": 2,
-    "expire": 3600
+    "expire": 2592000
   },
 
   "documents": {

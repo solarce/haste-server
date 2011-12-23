@@ -15,14 +15,25 @@ haste_document.prototype.load = function(key, callback, lang) {
       _this.key = key;
       _this.data = res.data;
       try {
-        var high = lang ? hljs.highlight(lang, res.data) : hljs.highlightAuto(res.data);
+        var high;
+        if (lang === 'txt') {
+          high = { value: res.data };
+        }
+        else if (lang) {
+          high = hljs.highlight(lang, res.data);
+        }
+        else {
+          high = hljs.highlightAuto(res.data);
+        }
       } catch(err) {
-        high = { value: res.data, language: null };
+        // failed highlight, fall back on auto
+        high = hljs.highlightAuto(res.data);
       }
       callback({
         value: high.value,
         key: key,
-        language: high.language || lang
+        language: high.language || lang,
+        lineCount: res.data.split("\n").length
       });
     },
     error: function(err) {
@@ -46,11 +57,20 @@ haste_document.prototype.save = function(data, callback) {
       _this.locked = true;
       _this.key = res.key;
       var high = hljs.highlightAuto(data);
-      callback({
+      callback(null, {
         value: high.value,
         key: res.key,
-        language: high.language
+        language: high.language,
+        lineCount: data.split("\n").length
       });
+    },
+    error: function(res) {
+      try {
+        callback($.parseJSON(res.responseText));
+      }
+      catch (e) {
+        callback({message: 'Something went wrong!'});
+      }
     }
   });
 };
@@ -63,12 +83,13 @@ var haste = function(appName, options) {
   this.$textarea = $('textarea');
   this.$box = $('#box');
   this.$code = $('#box code');
+  this.$linenos = $('#linenos');
   this.options = options;
   this.configureShortcuts();
   this.configureButtons();
   // If twitter is disabled, hide the button
   if (!options.twitter) {
-    $('#key .box2 .twitter').hide();
+    $('#box2 .twitter').hide();
   }
 };
 
@@ -78,22 +99,29 @@ haste.prototype.setTitle = function(ext) {
   document.title = title;
 };
 
+// Show a message box
+haste.prototype.showMessage = function(msg, cls) {
+  var msgBox = $('<li class="'+(cls || 'info')+'">'+msg+'</li>');
+  $('#messages').prepend(msgBox);
+  setTimeout(function() {
+    msgBox.slideUp('fast', function() { $(this).remove(); });
+  }, 3000);
+};
+
 // Show the light key
 haste.prototype.lightKey = function() {
   this.configureKey(['new', 'save']);
-  this.removeClip();
 };
 
 // Show the full key
 haste.prototype.fullKey = function() {
   this.configureKey(['new', 'duplicate', 'twitter', 'link']);
-  this.configureClip();
 };
 
 // Set the key up for certain things to be enabled
 haste.prototype.configureKey = function(enable) {
   var $this, i = 0;
-  $('#key .box2 .function').each(function() {
+  $('#box2 .function').each(function() {
     $this = $(this);
     for (i = 0; i < enable.length; i++) {
       if ($this.hasClass(enable[i])) {
@@ -118,21 +146,50 @@ haste.prototype.newDocument = function(hideHistory) {
   this.$textarea.val('').show('fast', function() {
     this.focus();
   });
+  this.removeLineNumbers();
 };
 
 // Map of common extensions
+// Note: this list does not need to include anything that IS its extension,
+// due to the behavior of lookupTypeByExtension and lookupExtensionByType
+// Note: optimized for lookupTypeByExtension
 haste.extensionMap = {
-    rb: 'ruby', py: 'python', pl: 'perl', php: 'php', scala: 'scala', go: 'go',
-    xml: 'xml', html: 'xml', htm: 'xml', css: 'css', js: 'javascript', vbs: 'vbscript',
-    lua: 'lua', pas: 'delphi', java: 'java', cpp: 'cpp', cc: 'cpp', m: 'objectivec',
-    vala: 'vala', cs: 'cs', sql: 'sql', sm: 'smalltalk', lisp: 'lisp', ini: 'ini',
-    diff: 'diff', bash: 'bash', sh: 'bash', tex: 'tex', erl: 'erlang', hs: 'haskell'
+  rb: 'ruby', py: 'python', pl: 'perl', php: 'php', scala: 'scala', go: 'go',
+  xml: 'xml', html: 'xml', htm: 'xml', css: 'css', js: 'javascript', vbs: 'vbscript',
+  lua: 'lua', pas: 'delphi', java: 'java', cpp: 'cpp', cc: 'cpp', m: 'objectivec',
+  vala: 'vala', cs: 'cs', sql: 'sql', sm: 'smalltalk', lisp: 'lisp', ini: 'ini',
+  diff: 'diff', bash: 'bash', sh: 'bash', tex: 'tex', erl: 'erlang', hs: 'haskell',
+  md: 'markdown', txt: ''
 };
 
-// Map an extension to a language
-haste.prototype.lookupExtension = function(ext) {
-  var match = haste.extensionMap[ext];
-  return match; // if not found, will auto-detect
+// Look up the extension preferred for a type
+// If not found, return the type itself - which we'll place as the extension
+haste.prototype.lookupExtensionByType = function(type) {
+  for (var key in haste.extensionMap) {
+    if (haste.extensionMap[key] === type) return key;
+  }
+  return type;
+};
+
+// Look up the type for a given extension
+// If not found, return the extension - which we'll attempt to use as the type
+haste.prototype.lookupTypeByExtension = function(ext) {
+  return haste.extensionMap[ext] || ext;
+};
+
+// Add line numbers to the document
+// For the specified number of lines
+haste.prototype.addLineNumbers = function(lineCount) {
+  var h = '';
+  for (var i = 0; i < lineCount; i++) {
+    h += (i + 1).toString() + '<br/>';
+  }
+  $('#linenos').html(h);
+};
+
+// Remove the line numbers
+haste.prototype.removeLineNumbers = function() {
+  $('#linenos').html('&gt;');
 };
 
 // Load a document and show it
@@ -145,19 +202,16 @@ haste.prototype.loadDocument = function(key) {
   _this.doc.load(parts[0], function(ret) {
     if (ret) {
       _this.$code.html(ret.value);
-      var title = ret.key;
-      if (ret.language) {
-        title += ' - ' + ret.language;
-      }
-      _this.setTitle(title);
+      _this.setTitle(ret.key);
       _this.fullKey();
       _this.$textarea.val('').hide();
       _this.$box.show().focus();
+      _this.addLineNumbers(ret.lineCount);
     }
     else {
       _this.newDocument();
     }
-  }, this.lookupExtension(parts[1]));
+  }, this.lookupTypeByExtension(parts[1]));
 };
 
 // Duplicate the current document - only if locked
@@ -172,49 +226,35 @@ haste.prototype.duplicateDocument = function() {
 // Lock the current document
 haste.prototype.lockDocument = function() {
   var _this = this;
-  this.doc.save(this.$textarea.val(), function(ret) {
-    if (ret) {
+  this.doc.save(this.$textarea.val(), function(err, ret) {
+    if (err) {
+      _this.showMessage(err.message, 'error');
+    }
+    else if (ret) {
       _this.$code.html(ret.value);
-      var title = ret.key;
+      _this.setTitle(ret.key);
+      var file = '/' + ret.key;
       if (ret.language) {
-        title += ' - ' + ret.language;
+        file += '.' + _this.lookupExtensionByType(ret.language);
       }
-      _this.setTitle(title);
-      window.history.pushState(null, _this.appName + '-' + ret.key, '/' + ret.key);
+      window.history.pushState(null, _this.appName + '-' + ret.key, file);
       _this.fullKey();
       _this.$textarea.val('').hide();
       _this.$box.show().focus();
+      _this.addLineNumbers(ret.lineCount);
     }
   });
-};
-
-// set up a clip that will copy the current url
-haste.prototype.configureClip = function() {
-  var clip = this.clipper = new ZeroClipboard.Client();
-  this.clipper.setHandCursor(true);
-  this.clipper.setCSSEffects(false);
-  // and then set and show
-  this.clipper.setText(window.location.href);
-  $('#key .box2 .link').html(this.clipper.getHTML(32, 37));
-};
-
-// hide the current clip, if it exists
-haste.prototype.removeClip = function() {
-  if (this.clipper) {
-    this.clipper.destroy();
-  }
-  $('#key .box2 .link').html('');
 };
 
 haste.prototype.configureButtons = function() {
   var _this = this;
   this.buttons = [
     {
-      $where: $('#key .box2 .save'),
+      $where: $('#box2 .save'),
       label: 'Save',
       shortcutDescription: 'control + s',
       shortcut: function(evt) {
-        return evt.ctrlKey && (evt.keyCode === 76 || evt.keyCode === 83);
+        return evt.ctrlKey && (evt.keyCode === 83);
       },
       action: function() {
         if (_this.$textarea.val().replace(/^\s+|\s+$/g, '') !== '') {
@@ -223,7 +263,7 @@ haste.prototype.configureButtons = function() {
       }
     },
     {
-      $where: $('#key .box2 .new'),
+      $where: $('#box2 .new'),
       label: 'New',
       shortcut: function(evt) {
         return evt.ctrlKey && evt.keyCode === 78  
@@ -234,7 +274,7 @@ haste.prototype.configureButtons = function() {
       }
     },
     {
-      $where: $('#key .box2 .duplicate'),
+      $where: $('#box2 .duplicate'),
       label: 'Duplicate & Edit',
       shortcut: function(evt) {
         return _this.doc.locked && evt.ctrlKey && evt.keyCode === 68;
@@ -245,21 +285,15 @@ haste.prototype.configureButtons = function() {
       }
     },
     {
-      $where: $('#key .box2 .twitter'),
+      $where: $('#box2 .twitter'),
       label: 'Twitter',
       shortcut: function(evt) {
         return _this.options.twitter && _this.doc.locked && evt.ctrlKey && evt.keyCode == 84;
       },
       shortcutDescription: 'control + t',
       action: function() {
-        window.open('https://twitter.com/share?url=' + encodeURI(_this.baseUrl + _this.doc.key));
+        window.open('https://twitter.com/share?url=' + encodeURI(window.location.href));
       }
-    },
-    {
-      $where: $('#key .box2 .link'),
-      label: 'Copy URL',
-      letBubble: true,
-      action: function() { }
     }
   ];
   for (var i = 0; i < this.buttons.length; i++) {
@@ -271,19 +305,21 @@ haste.prototype.configureButton = function(options) {
   // Handle the click action
   options.$where.click(function(evt) {
     evt.preventDefault();
-    if ($(this).hasClass('enabled')) {
+    if (!options.clickDisabled && $(this).hasClass('enabled')) {
       options.action();
     }
   });
   // Show the label
   options.$where.mouseenter(function(evt) {
-    $('#key .box3 .label').text(options.label);
-    $('#key .box3 .shortcut').text(options.shortcutDescription || '');
-    $('#key .box3').show();
+    $('#box3 .label').text(options.label);
+    $('#box3 .shortcut').text(options.shortcutDescription || '');
+    $('#box3').show();
+    $(this).append($('#pointer').remove().show());
   });
   // Hide the label
   options.$where.mouseleave(function(evt) {
-    $('#key .box3').hide();
+    $('#box3').hide();
+    $('#pointer').hide();
   });
 };
 
@@ -295,9 +331,7 @@ haste.prototype.configureShortcuts = function() {
     for (var i = 0 ; i < _this.buttons.length; i++) {
       button = _this.buttons[i];
       if (button.shortcut && button.shortcut(evt)) {
-        if (!button.letBubble) {
-          evt.preventDefault();
-        }
+        evt.preventDefault();
         button.action();
         return;
       }
