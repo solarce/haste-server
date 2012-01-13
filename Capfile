@@ -33,7 +33,7 @@ namespace :deploy do
     run "rm #{deploy_to}/current; true"
     run "ln -sf #{deploy_to}/releases/#{release} #{deploy_to}/current"
 
-    run "cd #{deploy_to}/current && npm install https://github.com/ovaillancourt/hashlib/tarball/compat_fix_node_0_6_X"
+    run "cd #{deploy_to}/current && npm install hiredis"
     run "cd #{deploy_to}/current && npm install redis"
     run "cd #{deploy_to}/current && npm install"
 
