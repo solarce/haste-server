@@ -3,6 +3,6 @@ name: hastebin
 mem: 128M
 
 services:
-  file-backing: redis
+  file-backing: memcached
 
 

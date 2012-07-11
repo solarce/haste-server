@@ -21,7 +21,7 @@
   },
 
   "storage": {
-    "type": "redis",
+    "type": "memcached",
     "expire": 2592000
   },
 

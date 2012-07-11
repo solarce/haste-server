@@ -21,7 +21,7 @@
 		"winston": "*",
     "connect": "< 2",
     "uglify-js": "*",
-    "redis": ""
+    "memcache": ""
 	},
 
 	"devDependencies": {
