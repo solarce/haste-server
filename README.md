@@ -33,6 +33,11 @@ STDOUT.  Check the README there for more details and usages.
 3.  `npm install`
 4.  `npm start`
 
+## Pushing to Stackato
+
+1. Clone this repo
+2. stackato push -n
+
 ## Settings
 
 * `host` - the host the server runs on (default localhost)
