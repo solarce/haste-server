@@ -20,7 +20,8 @@
 	"dependencies": {
 		"winston": "*",
     "connect": "< 2",
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "redis": ""
 	},
 
 	"devDependencies": {
