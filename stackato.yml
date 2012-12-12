@@ -1,7 +1,10 @@
 name: hastebin
-
+framework:
+  type: buildpack
+  framework: node
 mem: 128M
-
+env:
+  BUILDPACK_URL: git://github.com/solarce/heroku-buildpack-nodejs.git
 services:
   file-backing: redis
 
